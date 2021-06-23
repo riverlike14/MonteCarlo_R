@@ -136,6 +136,72 @@ system.time(test1(N, a, b)); system.time(test2(N, a, b))
 ### (b), (c)
 Omit.
 
+
+
+
+
+
+
+
+## Exercise 2.14
+
+### (a)
+Omit
+
+### (b)
+```{r}
+N = 1000
+r = 10
+
+par(mfrow=c(1,3))
+for (p in c(0.01, 0.1, 0.5)) {
+  tmean = r*(1-p)/p
+  tstd = sqrt(r*(1-p)/p^2)
+  mrange = round(seq(max(0, tmean - 3*tstd), tmean + 3*tstd, 1))
+  prob = pnbinom(mrange, r, p)
+  X = rep(0, N)
+  
+  for (i in 1:N) {
+    u = runif(1)
+    X[i] = mrange[1] + sum(prob < u)
+  }
+  
+  hist(X, freq=FALSE, main=paste("Negative Binomial with p=", p, sep=""))
+  lines(dnbinom(seq(1, max(X)), r, p), col="sienna", lwd=2)
+}
+```
+
+### (c)
+```{r}
+N = 1000
+
+par(mfrow=c(1, 3))
+for (p in c(0.001, 0.01, 0.5)) {
+  tmean = -(1-p)/(p*log(p))
+  tvar = -(1-p)/(p^2*log(p)) - tmean^2
+  tstd = sqrt(tvar)
+  mrange = round(seq(max(1, tmean - 3*tstd), tmean + 3*tstd, 1))
+  density = function(x, p) {
+    -(1-p)^x/(x*log(p))
+  }
+  prob = cumsum(density(mrange, p))
+  X = rep(1, N)
+  
+  for (i in 1:N) {
+    u = runif(1)
+    X[i] = mrange[1] + sum(prob < u)
+  }
+  
+  M = max(X)
+  
+  hist(X, freq=FALSE, main=paste("Logarithmic Series with p=", p, sep=""))
+  lines(density(seq(1, M), p), col="sienna", lwd=2)
+}
+```
+
+The histogram when $p=0.5$ seems to be an error of R. The first two histogram show that the tail distribution is so heavy, in which it is not unlikable to be happened even outside of three times standard deviation further from the mean.
+
+
 ## Exercise 2.18
 ```{r}
 N = 2500
