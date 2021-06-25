@@ -642,10 +642,10 @@ output: html_document
 <!-- The acceptance rate is $1/M$, which will be significantly small when $a$ is large enough, i.e. $a$ is in the tail distribution. -->
 
 ### (c)
-Let $f(x) = \frac{1}{\sqrt{2 \pi}} \exp(-\frac{x^2}{2}) 1_{[a, \infty)}(x) / \Phi(-a)$ and $g(x) = \frac{1}{\sqrt{2 \pi}} \exp(-\frac{(x - \bar\mu)^2}{2})$. 
+Let $f(x) = \frac{1}{\sqrt{2 \pi}} \exp(-\frac{x^2}{2}) 1_{[a, \infty)}(x) / \Phi(-a)$ and $g(x) = \frac{1}{\sqrt{2 \pi}} \exp(-\frac{(x - \bar\mu)^2}{2})$ be the density functions. 
 Then one can check that $f(x)/g(x) = \exp(-x\bar\mu + \frac{\bar\mu^2}{2}) 1_{[a, \infty)}(x) / \Phi(-a)$ is maximized when $x=a$.
 Therefore we define the constant $M = \exp(-\bar\mu a + \frac{\bar\mu^2}{2}) / \Phi(-a)$ so that we have $f(x) \leq Mg(x)$.
-On the other hand, we must minimize this $M = \exp(\frac{(\bar\mu - a)^2}{2} - \frac{a^2}{2})$ w.r.t $\bar\mu$.
+On the other hand, we must minimize this $M = \exp(\frac{(\bar\mu - a)^2}{2} - \frac{a^2}{2}) / \Phi(-a)$ w.r.t $\bar\mu$.
 Since $\bar\mu > 0$, there is no optimal $\bar\mu$ if $a \leq 0$. If $a > 0$ then $a$ is the optimal $\bar\mu$.
 
 ### (d)
@@ -654,5 +654,47 @@ In the same way, one can check that $f(x)/g_\alpha(x) = \frac{1}{\alpha \sqrt{2 
 Since $\alpha \geq a$, the ratio attains maximum $\frac{1}{\alpha \sqrt{2 \pi}} \exp(\frac{\alpha^2}{2} - a\alpha) / \Phi(-a)$ when $x = \alpha$.
 Moreover, $\alpha = a$ still makes a legitimate candidate density.
 
+To implement the code, we assume that $a > 0$.
+```{R}
+N = 10^6
+a = 5
+
+dexpa = function(x, a) {
+  return(dexp(x-a, a))
+}
+rexpa = function(n, a) {
+  X = rexp(n, a)
+  return(X + a)
+}
+testd = function(N, a) {
+  M = exp(-a^2/2) / (a*sqrt(2*pi)*pnorm(-a))
+  Y = rexpa(N, a)
+  U = runif(N)
+  X = Y[(U*M*dexpa(Y, a) < dnorm(Y)/pnorm(-a)) & a < Y]
+  return(X)
+}
+
+testc = function(N, a) {
+  M = exp(-a^2/2) / pnorm(-a)
+  Y = rnorm(N, mean=a)
+  U = runif(N)
+  X = Y[(U*M*dnorm(Y, mean=a) < dnorm(Y)/pnorm(-a)) & (a <= Y)]
+  return(X)
+}
+
+system.time(testc(N, a))
+system.time(testd(N, a))
+
+Xc = testc(N, a)
+Xd = testd(N, a)
+xmax = max(Xc, Xd)
+Xrange = seq(a, xmax, 0.001)
+
+par(mfrow=c(1, 2))
+hist(Xc, freq=FALSE, breaks=seq(a, xmax+0.1, 0.1), main="Method by (c)")
+lines(Xrange, dnorm(Xrange)/pnorm(-a), col="sienna", lwd=2)
+hist(Xd, freq=FALSE, breaks=seq(a, xmax+0.1, 0.1), main="Method by (d)")
+lines(Xrange, dnorm(Xrange)/pnorm(-a), col="sienna", lwd=2)
+```
 
 ## Exercise 2.23

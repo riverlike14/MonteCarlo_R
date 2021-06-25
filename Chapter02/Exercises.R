@@ -514,20 +514,44 @@ hist(X3, freq=FALSE, main="Truncated at a=3")
 
 
 ### (d)
+# assume a > 0
 N = 10^6
-a = 3
-M = exp(-a^2/2) / (a*sqrt(2*pi)*pnorm(-a))
+a = 10
+
 dexpa = function(x, a) {
   return(dexp(x-a, a))
 }
 rexpa = function(n, a) {
   X = rexp(n, a)
-  X = X + a
+  return(X + a)
+}
+testd = function(N, a) {
+  M = exp(-a^2/2) / (a*sqrt(2*pi)*pnorm(-a))
+  Y = rexpa(N, a)
+  U = runif(N)
+  X = Y[(U*M*dexpa(Y, a) < dnorm(Y)/pnorm(-a)) & a < Y]
   return(X)
 }
-Y = rexpa(N, a)
-U = runif(N)
-X = Y[U*M*dexpa(Y, a) < dnorm(Y)]
-hist(X, freq=FALSE, breaks=seq(3, 5, 0.1))
-lines(seq(3, 5, 0.01), dnorm(seq(3, 5, 0.01))/pnorm(-3), col="sienna", lwd=2)
+
+testc = function(N, a) {
+  M = exp(-a^2/2) / pnorm(-a)
+  Y = rnorm(N, mean=a)
+  U = runif(N)
+  X = Y[(U*M*dnorm(Y, mean=a) < dnorm(Y)/pnorm(-a)) & (a <= Y)]
+  return(X)
+}
+
+system.time(testc(N, a))
+system.time(testd(N, a))
+
+Xc = testc(N, a)
+Xd = testd(N, a)
+xmax = max(Xc, Xd)
+Xrange = seq(a, xmax, 0.001)
+
+par(mfrow=c(1, 2))
+hist(Xc, freq=FALSE, breaks=seq(a, xmax+0.1, 0.1), main="Method by (c)")
+lines(Xrange, dnorm(Xrange)/pnorm(-a), col="sienna", lwd=2)
+hist(Xd, freq=FALSE, breaks=seq(a, xmax+0.1, 0.1), main="Method by (d)")
+lines(Xrange, dnorm(Xrange)/pnorm(-a), col="sienna", lwd=2)
 
