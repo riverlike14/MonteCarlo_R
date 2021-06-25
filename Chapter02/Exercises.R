@@ -513,5 +513,21 @@ hist(X2, freq=FALSE, main="Truncated at a=2")
 hist(X3, freq=FALSE, main="Truncated at a=3")
 
 
-### (b)
+### (d)
+N = 10^6
+a = 3
+M = exp(-a^2/2) / (a*sqrt(2*pi)*pnorm(-a))
+dexpa = function(x, a) {
+  return(dexp(x-a, a))
+}
+rexpa = function(n, a) {
+  X = rexp(n, a)
+  X = X + a
+  return(X)
+}
+Y = rexpa(N, a)
+U = runif(N)
+X = Y[U*M*dexpa(Y, a) < dnorm(Y)]
+hist(X, freq=FALSE, breaks=seq(3, 5, 0.1))
+lines(seq(3, 5, 0.01), dnorm(seq(3, 5, 0.01))/pnorm(-3), col="sienna", lwd=2)
 
